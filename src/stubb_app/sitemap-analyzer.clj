@@ -14,7 +14,6 @@
 (def partition-size 100)
 (def results-base-directory "sitemap_results")
 
-
 (defn inspect-dom-for-noindex
   [root]
   (let [selection (hs/select (hs/and (hs/tag :meta) (hs/attr :name #{"robots"}))
@@ -31,7 +30,7 @@
   (let [futures (doall (map (juxt identity http/get) urls))]
     (for [[url response] futures]
       (do 
-        (let [ {:keys [body status headers error opts]} @response
+        (let [{:keys [body status headers error opts]} @response
               err (if (nil? error) "{}" (:message (bean error)))]
           (if (empty? body)
             {:url url
@@ -50,59 +49,11 @@
                        (conj accum (doall (process-submap-partition partition))))
                      () url-partitions))))
 
-(defn extract-xml-files
-  [sitemap-directory]
-  (filter (fn [f]
-            (let [{is-file? :file 
-                   file-name :name} (bean f)]
-              (and is-file?
-                   (not= "sitemap.xml" file-name)
-                   (str/ends-with? file-name ".xml"))))
-          sitemap-directory))
-
-(defn update-error-stats
-  [err-msg]
-  (if (contains? failures err-msg)
-    (assoc failures err-msg (inc (get failures err-msg)))
-    (assoc failures err-msg 1)))
-
-(defn report-builder
-  [result]
-  (t/with-test-out
-    (let [{:keys [type expected actual message]} result
-          url (first t/*testing-contexts*)]
-      (if (= type :fail)
-        (do
-          (swap! num-failures inc)
-          (update-error-stats message)
-          (println  (str "  " url))
-          (println "    Failure reason: " message)
-          ;; these counters are here only for debug and dev purposes, will print this at the end of all results
-          ;; (println "      Total Tests run [" @num-tests-run "] Total failures [" @num-failures "]")
-          )))))
-
-
-(defn report-results
-  [result]
-  (with-redefs [t/report report-builder]
-    (let [{:keys [status error url robots-meta]} result]
-      (swap! num-tests-run inc)
-      (t/testing url
-        (t/is (= 200 status) (str "Non-200 Status: " (if (nil? status) error status)))
-        (t/is (not (contains? robots-meta "noindex")) "Contains Robots-NoIndex")))))
-
-(defn get-date-string
-  []
-  (let [time (bean (java.time.LocalDate/now))
-        {month :monthValue  day :dayOfMonth year :year} time]
-    (str month "-" day "-" year)))
-
 (defn persist-results
   [results xml-file]
   (let [file-name (-> xml-file bean :parentFile bean :name) 
         _ (io/make-parents @results-directory file-name)
         out-file (io/file @results-directory (str file-name ".edn"))]
-    (println (bean out-file))
     (with-open [w (io/writer out-file)]
       (binding [*out* w]
         (pr results)))))
@@ -118,30 +69,48 @@
                       :parentFile
                       bean
                       :name)
-        curr-num-tests-run  @num-tests-run
-        curr-num-failures @num-failures]
-    (println "Processing sub-map for" file-name " ..." )    
-    ;;(doall (map report-results (process-sitemap-urls urls)))
-    (persist-results {:results (reduce conj #{}  (doall (process-sitemap-urls urls)))} xml-file)
-    ;; (println (str "Total tests run in " file-name " ["(- @num-tests-run curr-num-tests-run)
-                  ;; "]. Total failures in " file-name " [" (- @num-failures curr-num-failures) "]"))
-    ))
+        curr-time (System/currentTimeMillis)]
+    (println "  Processing sub-map for" file-name "..." )    
+    (persist-results 
+     {:results (reduce conj #{} (doall (process-sitemap-urls urls)))} 
+     xml-file)
+    (println (str "    Finished processing sub-map for" file-name))
+    (println (str "      Processed [" (count urls) "] urls"))
+    (println (str "      Time to process: [" (- (System/currentTimeMillis) curr-time) "] milliseconds"))))
+
+(defn extract-xml-files
+  [sitemap-directory]
+  (filter (fn [f]
+            (let [{is-file? :file 
+                   file-name :name} (bean f)]
+              (and is-file?
+                   (not= "sitemap.xml" file-name)
+                   (str/ends-with? file-name ".xml"))))
+          sitemap-directory))
+
+(defn get-date-string
+  []
+  (let [time (bean (java.time.LocalDate/now))
+        {month :monthValue  day :dayOfMonth year :year} time]
+    (str month "-" day "-" year)))
 
 (defn init
-  []
-  (reset! results-directory (io/file results-base-directory (get-date-string)))
+  [site-name]
+  (let [directory (io/file (str results-base-directory "/" site-name) (get-date-string))]
+    (reset! results-directory directory)
+    (println "The results for this sitemap will be saved in: " (-> directory bean :canonicalPath)))
   (reset! num-tests-run 0)
   (reset! num-failures 0))
 
 (defn process-sitemap-directory
   [path-to-sitemap]
   (let [sitemap-directory (file-seq (io/file path-to-sitemap))
+        site-name (-> sitemap-directory first bean :name)
         xml-files (extract-xml-files sitemap-directory)
         currTime (System/currentTimeMillis)]
-    (init)
+    (init site-name)
     (println "Processing Sitemap ...")
     (doall (map process-xml-sitemap xml-files))
     (println "")
-    (println "Sitemap analysis complete.")
-    (println (str "Total number of test run [" @num-tests-run "]. Total number of failures [" @num-failures "]."))
-    (println (str "Total elapsed time " (- (System/currentTimeMillis) currTime)))))
+    (println "Sitemap Processed ")
+    (println (str "Total elapsed time " (- (System/currentTimeMillis) currTime) " milliseconds"))))
