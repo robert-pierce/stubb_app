@@ -1,12 +1,11 @@
-(ns stubb_app.sitemap_analyzer
+(ns stubb-app.sitemap-analyzer
   (:require [org.httpkit.client :as http]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [hickory.core :as html]
             [hickory.select :as hs]
             [clojure.data.xml :as xml]
-            [clojure.data.json :as json]
-            [clojure.test :as t]))
+            [clojure.data.json :as json]))
 
 (def num-tests-run (atom 0))
 (def num-failures (atom 0))
@@ -31,7 +30,7 @@
     (for [[url response] futures]
       (do 
         (let [{:keys [body status headers error opts]} @response
-              err (if (nil? error) "{}" (:message (bean error)))]
+              err (if (nil? error) {} (:message (bean error)))]
           (if (empty? body)
             {:url url
              :status status
@@ -72,7 +71,8 @@
         curr-time (System/currentTimeMillis)]
     (println "  Processing sub-map for" file-name "..." )    
     (persist-results 
-     {:results (reduce conj #{} (doall (process-sitemap-urls urls)))} 
+     {:meta "TODO-add-metadata"
+      :results (reduce conj #{} (doall (process-sitemap-urls urls)))} 
      xml-file)
     (println (str "    Finished processing sub-map for" file-name))
     (println (str "      Processed [" (count urls) "] urls"))
