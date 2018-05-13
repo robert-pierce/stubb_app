@@ -14,6 +14,8 @@
 (def results-base-directory "sitemap_results")
 
 (defn inspect-dom-for-noindex
+  "When making http calls to each sitemap url, we need to check the dom 
+  for a meta tag named 'robots'. It will usually contain a 'noindex' attribute."
   [root]
   (let [selection (hs/select (hs/and (hs/tag :meta) (hs/attr :name #{"robots"}))
                              root)]
@@ -25,6 +27,8 @@
             (->> (into #{} (map str/trim))))))
 
 (defn process-submap-partition
+  "Takes in a set of sitemap urls and makes https calls to each url.
+  Returns a map of results for each call"
   [urls]
   (let [futures (doall (map (juxt identity http/get) urls))]
     (for [[url response] futures]
@@ -42,6 +46,8 @@
              :robots-meta (inspect-dom-for-noindex (html/as-hickory (html/parse body)))}))))))
 
 (defn process-sitemap-urls
+  "Responsible for partioning all sitemap urls for a sitemap xml file,
+  and then making http calls to those urls and collatating the results."
   [urls]
   (let [url-partitions (partition-all partition-size urls)]
     (flatten (reduce (fn [accum partition]
@@ -49,6 +55,7 @@
                      () url-partitions))))
 
 (defn persist-results
+  "Saves the results from processing a sitemap xml file"
   [results xml-file]
   (let [file-name (-> xml-file bean :parentFile bean :name) 
         _ (io/make-parents @results-directory file-name)
@@ -58,6 +65,11 @@
         (pr results)))))
 
 (defn process-xml-sitemap
+  "Takes in an xml file from a valid sitemap and processes it.
+   Stores the results in a file. Result structure looks like
+  {:meta <some-meta> 
+   :results #{{:url <some-url> :status 200 :error {} :robots-meta nil}
+              {:url <some-other-url> :status 200 :error :robots-meta #{'noindex'}}}"
   [xml-file]
   (let [urls (->> (xml/parse (io/reader xml-file))
                   :content
@@ -79,6 +91,9 @@
     (println (str "      Time to process: [" (- (System/currentTimeMillis) curr-time) "] milliseconds"))))
 
 (defn extract-xml-files
+  "When given a root node for a directory containing a valid sitemap, will 
+  recursively filter through the directory returning only xml files that
+  we are interested in processing."
   [sitemap-directory]
   (filter (fn [f]
             (let [{is-file? :file 
@@ -89,12 +104,15 @@
           sitemap-directory))
 
 (defn get-date-string
+  "returns the current date as a string in <month-day-year> format"
   []
   (let [time (bean (java.time.LocalDate/now))
         {month :monthValue  day :dayOfMonth year :year} time]
     (str month "-" day "-" year)))
 
 (defn init
+  "Set some state to define the directory  and file 
+  to store the results. Also initialize some counters"
   [site-name]
   (let [directory (io/file (str results-base-directory "/" site-name) (get-date-string))]
     (reset! results-directory directory)
@@ -103,6 +121,10 @@
   (reset! num-failures 0))
 
 (defn process-sitemap-directory
+  "Will process a sitemap. Needs a path to locate the sitemap.
+   Path can be anything that can be passed to 1-arity 
+  (clojure.java.io/file <path-to-sitemap>). The results will be stored 
+  in a directory defined by the const 'results-base-directory'"
   [path-to-sitemap]
   (let [sitemap-directory (file-seq (io/file path-to-sitemap))
         site-name (-> sitemap-directory first bean :name)
