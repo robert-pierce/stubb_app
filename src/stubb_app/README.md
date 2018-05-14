@@ -7,9 +7,9 @@ The Sitemap Analyzer has two independent parts:
 * sitemap-analyzer.clj
 * sitemap-tester.clj
 
-Todo: These names are not very descriptive of that they do. A more appropriate name for the sitemap-analyzer may be sitemap-processor since this set of functions is basically making https calls and storing the results of those calls. The sitemap-tester.clj would be better named 'sitemap-analyzer.clj' since it is actually taking the results, checking for failures, and reporting those results.
+> Todo: These names are not very descriptive of that they do. A more appropriate name for the sitemap-analyzer may be sitemap-processor since this set of functions is basically making https calls and storing the results of those calls. The sitemap-tester.clj would be better named 'sitemap-analyzer.clj' since it is actually taking the results, checking for failures, and reporting those results.
 
-Todo: We are not sure how this tooling will be deployed or even exactly how it will be used. Since we do not know these specifics, many elements of the design where left in a state of that requires manual inspection and manipulation of the source (i.e. setting partition size, and results directory names in global vars). These params should be able to be set by the user via a cli for example.
+> Todo: We are not sure how this tooling will be deployed or even exactly how it will be used. Since we do not know these specifics, many elements of the design where left in a state of that requires manual inspection and manipulation of the source (i.e. setting partition size, and results directory names in global vars). These params should be able to be set by the user via a cli for example.
 
 ### sitemap-analyzer.clj
 
