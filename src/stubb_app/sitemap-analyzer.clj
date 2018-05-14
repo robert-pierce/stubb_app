@@ -122,7 +122,7 @@
 
 (defn process-sitemap-directory
   "Will process a sitemap. Needs a path to locate the sitemap.
-   Path can be anything that can be passed to 1-arity 
+   Path can be anything that can be passed to the 1-arity 
   (clojure.java.io/file <path-to-sitemap>). The results will be stored 
   in a directory defined by the const 'results-base-directory'"
   [path-to-sitemap]
@@ -130,9 +130,11 @@
         site-name (-> sitemap-directory first bean :name)
         xml-files (extract-xml-files sitemap-directory)
         currTime (System/currentTimeMillis)]
-    (init site-name)
-    (println "Processing Sitemap ...")
-    (doall (map process-xml-sitemap xml-files))
-    (println "")
-    (println "Sitemap Processed ")
-    (println (str "Total elapsed time " (- (System/currentTimeMillis) currTime) " milliseconds"))))
+    (if (> (count xml-files) 0) 
+      (do (init site-name)
+          (println "Processing Sitemap ...")
+          (doall (map process-xml-sitemap xml-files))
+          (println "")
+          (println "Sitemap Processed ")
+          (println (str "Total elapsed time " (- (System/currentTimeMillis) currTime) " milliseconds")))
+      (println (str "No xml files in \"" path-to-sitemap "\" where found")))))
