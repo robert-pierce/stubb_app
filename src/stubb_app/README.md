@@ -25,7 +25,7 @@ The results directory should have a structure similar to:
 ```
  sitemap_results/ 
  |--- <sitemap-name>/
- |    |---  <todays-date>/    
+ |    |--- <todays-date>/    
  |    |     |--- <sitemap-results>.edn
  |    |     |--- <other-sitemap-results>.edn
  |    |     .          
