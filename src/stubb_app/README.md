@@ -22,7 +22,7 @@ Once calling (process-sitemap-directory <path-to-sitemap>) with a path to a vali
 After the sitemap has been processed, a new directory should be created. Where this directory is created is based on the var 'results-base-directory'. Currently it is set to 'sitemap_results' which means a new directory intitled 'sitemap_results' will created in the root directory of the project that this code lives in. This needs to be updated and is not ideal, but works at this time.
 
 The results directory should have a structure similar to:
-
+```
  sitemap_results/ 
  |--- <sitemap-name>/
  |    |---  <todays-date>/    
@@ -31,7 +31,7 @@ The results directory should have a structure similar to:
  |    |     .          
  |    |     .
  |    |     .
-
+```
 Several results should be able to be saved into the same directory since the results are stored in directories named by date.
 
 After the results are stored as .edn we can now move one to the second part.
@@ -43,13 +43,13 @@ The sitemap-tester is responsible for analyzing and reporting desired results fr
 The sitemap-tester can be started by calling (analyze-sitemap <path-to-sitemap>) where the param <path-to-sitemap> is a string url that points to the directory where processed sitemap results are stored. The url needs to be a path to the folder containing the .edn files: i.e. "sitemap_results/<sitemap_name>/<todays-date>/"
 
 The sitemap-tester will then analyze the results and create a new folder in the same directory called "analysis". The analysis directory will have a structure of:
-
+```
  analysis/
  |--- summary.edn
  |--- failing_urls/
  |    |--- no-index-failures.edn
  |    |--- non-200-failures.edn
-
+```
 The summary.edn will contain summary statistics: number of tests run, number of test failures, and failures by type (no-index or non-200 response).
 
 The failing_urls directory will contain actual failing urls for the no-index failure and non-200-response failures      
