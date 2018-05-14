@@ -13,11 +13,11 @@ Todo: We are not sure how this tooling will be deployed or even exactly how it w
 
 ### sitemap-analyzer.clj
 
-The sitemap-analyzer.clj provides a function  (process-sitemap-directory <path-to-sitemap>) that takes one argument: a path that points to a saved sitemap directory.  The path will be used to in a call to (file-seq (clojure.java.io/file path-to-sitemap) which will attempt to coerce its argument into a collection of files that represent the sitemap. 
+The sitemap-analyzer.clj provides a function  (process-sitemap-directory \<path-to-sitemap\>) that takes one argument: a path that points to a saved sitemap directory.  The path will be used to in a call to (file-seq (clojure.java.io/file path-to-sitemap) which will attempt to coerce its argument into a collection of files that represent the sitemap. 
 
 The sitemap-analyzer will then attempt to filter out all files except for the xml files that contain the site urls. This collection of xml files is then processed one-by-one. In order to impose some throttling for the http requests we partition the urls for each xml file. Currently this partition size is set by a var partition-size in the sitemap-analyzer.clj. If we send requests too frequently then we will be blocked by our cloud provider's load balancer (or something like that).
 
-Once calling (process-sitemap-directory <path-to-sitemap>) with a path to a valid sitemap then the analyzer will begin processing the sitemap. The process should be documneted to the user via std out. Lately, the sitemap analysis takes about an hour with partition sizes of 100 urls each.
+Once calling (process-sitemap-directory \<path-to-sitemap\>) with a path to a valid sitemap then the analyzer will begin processing the sitemap. The process should be documneted to the user via std out. Lately, the sitemap analysis takes about an hour with partition sizes of 100 urls each.
 
 After the sitemap has been processed, a new directory should be created. Where this directory is created is based on the var 'results-base-directory'. Currently it is set to 'sitemap_results' which means a new directory intitled 'sitemap_results' will created in the root directory of the project that this code lives in. This needs to be updated and is not ideal, but works at this time.
 
@@ -40,7 +40,7 @@ After the results are stored as .edn we can now move one to the second part.
 
 The sitemap-tester is responsible for analyzing and reporting desired results from a processed sitemap (once again, the naming could be better). 
 
-The sitemap-tester can be started by calling (analyze-sitemap <path-to-sitemap>) where the param <path-to-sitemap> is a string url that points to the directory where processed sitemap results are stored. The url needs to be a path to the folder containing the .edn files: i.e. "sitemap_results/<sitemap_name>/<todays-date>/"
+The sitemap-tester can be started by calling (analyze-sitemap \<path-to-sitemap\>) where the param <path-to-sitemap> is a string url that points to the directory where processed sitemap results are stored. The url needs to be a path to the folder containing the .edn files: i.e. "sitemap_results/\<sitemap_name\>/\<todays-date\>/"
 
 The sitemap-tester will then analyze the results and create a new folder in the same directory called "analysis". The analysis directory will have a structure of:
 ```
